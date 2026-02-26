@@ -5,6 +5,7 @@ import sys
 import tkinter as tk
 from pathlib import Path
 from tkinter import messagebox, ttk
+from tkinter import ttk
 
 MM_PER_INCH = 25.4
 
@@ -67,6 +68,7 @@ class ConversionWidget(tk.Tk):
         calc_entry = ttk.Entry(self, textvariable=self.calc_expr_var, width=30)
         calc_entry.grid(column=0, row=11, sticky="ew", pady=(0, 8))
         ttk.Button(self, text="Clear", command=self._clear_calculator).grid(column=1, row=11, sticky="e", pady=(0, 8))
+        calc_entry.grid(column=0, row=11, columnspan=2, sticky="ew", pady=(0, 8))
         ttk.Label(self, textvariable=self.calc_result_var).grid(column=0, row=12, columnspan=2, sticky="w")
 
         self.mm_entry = mm_entry
@@ -309,6 +311,8 @@ def main() -> None:
         except tk.TclError:
             print(f"GUI startup error: {error}", file=sys.stderr)
             print(_display_hint(), file=sys.stderr)
+        print(f"GUI startup error: {error}", file=sys.stderr)
+        print(_display_hint(), file=sys.stderr)
         raise SystemExit(1)
 
 

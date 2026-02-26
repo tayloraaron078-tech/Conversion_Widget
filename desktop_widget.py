@@ -1,8 +1,10 @@
+import json
 import os
 import re
 import sys
 import tkinter as tk
-from tkinter import ttk
+from pathlib import Path
+from tkinter import messagebox, ttk
 
 MM_PER_INCH = 25.4
 
@@ -15,6 +17,7 @@ class ConversionWidget(tk.Tk):
         self.configure(padx=16, pady=16)
 
         self._active_source = None
+        self._save_job = None
 
         self.mm_var = tk.StringVar()
         self.inch_var = tk.StringVar()
@@ -27,6 +30,11 @@ class ConversionWidget(tk.Tk):
 
         self._build_ui()
         self._bind_events()
+
+        self.attributes("-topmost", True)
+        self.after(0, self._restore_or_position)
+        self.bind("<Configure>", self._debounced_save)
+        self.protocol("WM_DELETE_WINDOW", self._on_close)
 
     def _build_ui(self) -> None:
         title = ttk.Label(self, text="MM ↔ Inch Converter", font=("Segoe UI", 14, "bold"))
@@ -69,6 +77,55 @@ class ConversionWidget(tk.Tk):
         self.mm_entry.bind("<KeyRelease>", self._on_mm_changed)
         self.inch_entry.bind("<KeyRelease>", self._on_inch_changed)
         self.calc_entry.bind("<KeyRelease>", self._on_calc_changed)
+
+    def _state_path(self) -> Path:
+        base = Path(os.environ.get("APPDATA", str(Path.home())))
+        folder = base / "MMInchWidget"
+        folder.mkdir(parents=True, exist_ok=True)
+        return folder / "state.json"
+
+    def _save_window_state(self) -> None:
+        geom = self.geometry()
+        try:
+            self._state_path().write_text(json.dumps({"geometry": geom}), encoding="utf-8")
+        except Exception:
+            pass
+
+    def _load_window_state(self) -> bool:
+        try:
+            data = json.loads(self._state_path().read_text(encoding="utf-8"))
+            geom = data.get("geometry")
+            if isinstance(geom, str) and geom:
+                self.geometry(geom)
+                return True
+        except Exception:
+            pass
+        return False
+
+    def _snap_top_right(self, margin: int = 16) -> None:
+        self.update_idletasks()
+        win_w = self.winfo_width()
+        win_h = self.winfo_height()
+        screen_w = self.winfo_screenwidth()
+        x = max(margin, screen_w - win_w - margin)
+        y = margin
+        self.geometry(f"{win_w}x{win_h}+{x}+{y}")
+
+    def _restore_or_position(self) -> None:
+        self.update_idletasks()
+        restored = self._load_window_state()
+        self.update_idletasks()
+        if not restored:
+            self._snap_top_right()
+
+    def _debounced_save(self, _event=None) -> None:
+        if self._save_job is not None:
+            self.after_cancel(self._save_job)
+        self._save_job = self.after(250, self._save_window_state)
+
+    def _on_close(self) -> None:
+        self._save_window_state()
+        self.destroy()
 
     @staticmethod
     def _gcd(a: int, b: int) -> int:
@@ -247,8 +304,11 @@ def main() -> None:
         app = ConversionWidget()
         app.mainloop()
     except tk.TclError as error:
-        print(f"GUI startup error: {error}", file=sys.stderr)
-        print(_display_hint(), file=sys.stderr)
+        try:
+            messagebox.showerror("Widget Error", f"GUI startup error:\n\n{error}\n\n{_display_hint()}")
+        except tk.TclError:
+            print(f"GUI startup error: {error}", file=sys.stderr)
+            print(_display_hint(), file=sys.stderr)
         raise SystemExit(1)
 
 

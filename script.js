@@ -9,6 +9,22 @@ const calcResult = document.getElementById('calc-result');
 const copyMmButton = document.getElementById('copy-mm');
 const copyInchButton = document.getElementById('copy-inch');
 const copyResultButton = document.getElementById('copy-result');
+const desiredHeightInput = document.getElementById('desired-height');
+const layerHeightInput = document.getElementById('layer-height');
+const calcLayerButton = document.getElementById('calc-layer');
+const layerOutput = document.getElementById('layer-output');
+const targetWallInput = document.getElementById('target-wall');
+const lineWidthInput = document.getElementById('line-width');
+const calcWallButton = document.getElementById('calc-wall');
+const wallOutput = document.getElementById('wall-output');
+const dimLengthInput = document.getElementById('dim-length');
+const dimWidthInput = document.getElementById('dim-width');
+const dimHeightInput = document.getElementById('dim-height');
+const nozzleSizeInput = document.getElementById('nozzle-size');
+const snapLayerHeightInput = document.getElementById('snap-layer-height');
+const snapLineWidthInput = document.getElementById('snap-line-width');
+const calcSnapButton = document.getElementById('calc-snap');
+const snapOutput = document.getElementById('snap-output');
 
 function gcd(a, b) {
   let x = Math.abs(a);
@@ -105,6 +121,118 @@ function parseInchValue(value) {
 
 function formatDecimal(value, precision = 6) {
   return value.toFixed(precision).replace(/\.?0+$/, '');
+}
+
+function parsePositiveNumber(value) {
+  const parsed = Number.parseFloat(value.trim());
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : Number.NaN;
+}
+
+function renderLayerHelper() {
+  const desiredHeight = parsePositiveNumber(desiredHeightInput.value);
+  const layerHeight = parsePositiveNumber(layerHeightInput.value);
+
+  if (!Number.isFinite(desiredHeight) || !Number.isFinite(layerHeight)) {
+    layerOutput.textContent = 'Please enter valid positive numbers for desired height and layer height.';
+    return;
+  }
+
+  const exactLayers = desiredHeight / layerHeight;
+  const lowerLayers = Math.floor(exactLayers);
+  const upperLayers = Math.ceil(exactLayers);
+  const nearestLayers = Math.round(exactLayers);
+
+  const lowerHeight = lowerLayers * layerHeight;
+  const upperHeight = upperLayers * layerHeight;
+  const nearestHeight = nearestLayers * layerHeight;
+
+  layerOutput.innerHTML = [
+    `Exact layer count: <strong>${formatDecimal(exactLayers, 4)}</strong>`,
+    `Nearest clean multiple: <strong>${formatDecimal(nearestHeight, 4)} mm</strong> (${nearestLayers} layers)`,
+    `Lower option: ${lowerLayers} layers = ${formatDecimal(lowerHeight, 4)} mm`,
+    `Snap up option: ${upperLayers} layers = ${formatDecimal(upperHeight, 4)} mm`,
+  ].join('<br>');
+}
+
+function renderWallHelper() {
+  const targetWall = parsePositiveNumber(targetWallInput.value);
+  const lineWidth = parsePositiveNumber(lineWidthInput.value);
+
+  if (!Number.isFinite(targetWall) || !Number.isFinite(lineWidth)) {
+    wallOutput.textContent = 'Please enter valid positive numbers for target wall thickness and line width.';
+    return;
+  }
+
+  const exactWallCount = targetWall / lineWidth;
+  const lowerCount = Math.max(1, Math.floor(exactWallCount));
+  const upperCount = Math.max(1, Math.ceil(exactWallCount));
+  const nearestCount = Math.max(1, Math.round(exactWallCount));
+
+  wallOutput.innerHTML = [
+    `Exact wall count: <strong>${formatDecimal(exactWallCount, 4)}</strong>`,
+    `Nearest printable count: <strong>${nearestCount} perimeters</strong> = ${formatDecimal(
+      nearestCount * lineWidth,
+      4,
+    )} mm`,
+    `Lower option: ${lowerCount} perimeters = ${formatDecimal(lowerCount * lineWidth, 4)} mm`,
+    `Snap up option: ${upperCount} perimeters = ${formatDecimal(upperCount * lineWidth, 4)} mm`,
+  ].join('<br>');
+}
+
+function snapDimension(value, increment) {
+  const count = Math.max(1, Math.round(value / increment));
+  const snapped = count * increment;
+  const delta = snapped - value;
+
+  return {
+    count,
+    snapped,
+    delta,
+  };
+}
+
+function renderSnapHelper() {
+  const length = parsePositiveNumber(dimLengthInput.value);
+  const width = parsePositiveNumber(dimWidthInput.value);
+  const height = parsePositiveNumber(dimHeightInput.value);
+  const nozzle = parsePositiveNumber(nozzleSizeInput.value);
+  const layerHeight = parsePositiveNumber(snapLayerHeightInput.value);
+  const lineWidth = parsePositiveNumber(snapLineWidthInput.value);
+
+  if (
+    !Number.isFinite(length)
+    || !Number.isFinite(width)
+    || !Number.isFinite(height)
+    || !Number.isFinite(nozzle)
+    || !Number.isFinite(layerHeight)
+    || !Number.isFinite(lineWidth)
+  ) {
+    snapOutput.textContent = 'Please fill all fields with valid positive numbers.';
+    return;
+  }
+
+  const lengthSnap = snapDimension(length, lineWidth);
+  const widthSnap = snapDimension(width, lineWidth);
+  const heightSnap = snapDimension(height, layerHeight);
+
+  snapOutput.innerHTML = [
+    `Nozzle: <strong>${formatDecimal(nozzle, 4)} mm</strong> | line width: <strong>${formatDecimal(
+      lineWidth,
+      4,
+    )} mm</strong> | layer: <strong>${formatDecimal(layerHeight, 4)} mm</strong>`,
+    `Length → ${lengthSnap.count} lines = ${formatDecimal(lengthSnap.snapped, 4)} mm (${formatDecimal(
+      lengthSnap.delta,
+      4,
+    )} mm adjustment)`,
+    `Width → ${widthSnap.count} lines = ${formatDecimal(widthSnap.snapped, 4)} mm (${formatDecimal(
+      widthSnap.delta,
+      4,
+    )} mm adjustment)`,
+    `Height → ${heightSnap.count} layers = ${formatDecimal(heightSnap.snapped, 4)} mm (${formatDecimal(
+      heightSnap.delta,
+      4,
+    )} mm adjustment)`,
+  ].join('<br>');
 }
 
 function updateFromMm() {
@@ -261,3 +389,7 @@ copyResultButton.addEventListener('click', () => {
 
   copyFieldValue(() => formatDecimal(result, 10), copyResultButton, 'No result available to copy.');
 });
+
+calcLayerButton.addEventListener('click', renderLayerHelper);
+calcWallButton.addEventListener('click', renderWallHelper);
+calcSnapButton.addEventListener('click', renderSnapHelper);

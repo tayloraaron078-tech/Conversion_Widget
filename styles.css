@@ -13,7 +13,7 @@ body {
 }
 
 .widget {
-  width: min(680px, 92vw);
+  width: min(820px, 92vw);
   background: rgba(17, 24, 39, 0.92);
   border: 1px solid rgba(148, 163, 184, 0.35);
   border-radius: 16px;
@@ -22,25 +22,49 @@ body {
 }
 
 h1,
-h2 {
+h2,
+h3 {
   margin: 0 0 0.4rem;
 }
 
-.subtitle {
+.subtitle,
+.helper-subtitle {
   margin: 0 0 1.25rem;
   color: #cbd5e1;
 }
 
 .converter,
-.calculator {
+.calculator,
+.helpers {
   display: grid;
   gap: 0.55rem;
 }
 
-.calculator {
+.calculator,
+.helpers {
   margin-top: 1.25rem;
   padding-top: 1rem;
   border-top: 1px solid rgba(148, 163, 184, 0.25);
+}
+
+.helper-card {
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 12px;
+  padding: 0.9rem;
+  background: rgba(15, 23, 42, 0.5);
+  margin-bottom: 0.7rem;
+}
+
+.helper-grid {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(130px, 1fr);
+  gap: 0.45rem 0.7rem;
+  align-items: center;
+  margin-bottom: 0.7rem;
+}
+
+.helper-grid-compact {
+  grid-template-columns: minmax(140px, 1fr) minmax(120px, 1fr);
 }
 
 label {
@@ -65,7 +89,8 @@ input {
   align-items: center;
 }
 
-.copy-button {
+.copy-button,
+.action-button {
   border: 1px solid rgba(56, 189, 248, 0.45);
   border-radius: 10px;
   background: rgba(14, 116, 144, 0.25);
@@ -75,11 +100,18 @@ input {
   cursor: pointer;
 }
 
-.copy-button:hover {
+.action-button {
+  justify-self: start;
+  margin-bottom: 0.45rem;
+}
+
+.copy-button:hover,
+.action-button:hover {
   background: rgba(14, 116, 144, 0.45);
 }
 
-.copy-button:focus {
+.copy-button:focus,
+.action-button:focus {
   outline: 2px solid #38bdf8;
   outline-offset: 1px;
 }
@@ -91,9 +123,15 @@ input:focus {
 
 .hint,
 .status,
-.calc-result {
+.calc-result,
+.helper-output {
   font-size: 0.93rem;
   color: #cbd5e1;
+}
+
+.helper-output {
+  min-height: 1.2rem;
+  line-height: 1.45;
 }
 
 .status {
@@ -101,8 +139,13 @@ input:focus {
   color: #fda4af;
 }
 
-@media (max-width: 520px) {
+@media (max-width: 620px) {
   .widget {
     padding: 1rem;
+  }
+
+  .helper-grid,
+  .helper-grid-compact {
+    grid-template-columns: 1fr;
   }
 }

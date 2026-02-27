@@ -44,6 +44,61 @@
           <button id="copy-result" type="button" class="copy-button">Copy</button>
         </div>
       </section>
+
+      <section class="helpers" aria-label="3D print design helpers">
+        <h2>Slicer-Friendly Design Helpers</h2>
+        <p class="helper-subtitle">Snap CAD dimensions to layer and line-width friendly values.</p>
+
+        <article class="helper-card" aria-label="Layer height helper">
+          <h3>Layer Height Math Helper</h3>
+          <div class="helper-grid">
+            <label for="desired-height">Desired height (mm)</label>
+            <input id="desired-height" type="text" inputmode="decimal" placeholder="e.g. 19.05" />
+            <label for="layer-height">Layer height (mm)</label>
+            <input id="layer-height" type="text" inputmode="decimal" placeholder="e.g. 0.3" />
+          </div>
+          <button id="calc-layer" type="button" class="action-button">Calculate layer options</button>
+          <div id="layer-output" class="helper-output" aria-live="polite">
+            Enter height + layer height to see clean multiples.
+          </div>
+        </article>
+
+        <article class="helper-card" aria-label="Wall count helper">
+          <h3>Wall Count Helper</h3>
+          <div class="helper-grid">
+            <label for="target-wall">Target wall thickness (mm)</label>
+            <input id="target-wall" type="text" inputmode="decimal" placeholder="e.g. 6.35" />
+            <label for="line-width">Line width (mm)</label>
+            <input id="line-width" type="text" inputmode="decimal" placeholder="e.g. 0.63" />
+          </div>
+          <button id="calc-wall" type="button" class="action-button">Calculate wall options</button>
+          <div id="wall-output" class="helper-output" aria-live="polite">
+            Enter wall thickness + line width to get clean perimeter counts.
+          </div>
+        </article>
+
+        <article class="helper-card" aria-label="CAD dimension snapping helper">
+          <h3>CAD Dimension Snap Helper</h3>
+          <div class="helper-grid helper-grid-compact">
+            <label for="dim-length">Desired length (mm)</label>
+            <input id="dim-length" type="text" inputmode="decimal" placeholder="Length" />
+            <label for="dim-width">Desired width (mm)</label>
+            <input id="dim-width" type="text" inputmode="decimal" placeholder="Width" />
+            <label for="dim-height">Desired height (mm)</label>
+            <input id="dim-height" type="text" inputmode="decimal" placeholder="Height" />
+            <label for="nozzle-size">Nozzle size (mm)</label>
+            <input id="nozzle-size" type="text" inputmode="decimal" placeholder="e.g. 0.6" />
+            <label for="snap-layer-height">Layer height (mm)</label>
+            <input id="snap-layer-height" type="text" inputmode="decimal" placeholder="e.g. 0.3" />
+            <label for="snap-line-width">Line width (mm)</label>
+            <input id="snap-line-width" type="text" inputmode="decimal" placeholder="e.g. 0.63" />
+          </div>
+          <button id="calc-snap" type="button" class="action-button">Calculate snap suggestions</button>
+          <div id="snap-output" class="helper-output" aria-live="polite">
+            Enter dimensions + print settings to get slicer-friendly adjustments.
+          </div>
+        </article>
+      </section>
     </main>
 
     <script src="script.js"></script>

@@ -6,6 +6,9 @@ const inchDisplay = document.getElementById('inch-display');
 const statusLine = document.getElementById('status');
 const calcInput = document.getElementById('calc-input');
 const calcResult = document.getElementById('calc-result');
+const copyMmButton = document.getElementById('copy-mm');
+const copyInchButton = document.getElementById('copy-inch');
+const copyResultButton = document.getElementById('copy-result');
 
 function gcd(a, b) {
   let x = Math.abs(a);
@@ -173,6 +176,54 @@ function evaluateExpression(expression) {
   }
 }
 
+async function copyTextToClipboard(text) {
+  if (navigator.clipboard && window.isSecureContext) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textArea = document.createElement('textarea');
+  textArea.value = text;
+  textArea.setAttribute('readonly', '');
+  textArea.style.position = 'absolute';
+  textArea.style.left = '-9999px';
+  document.body.appendChild(textArea);
+  textArea.select();
+  const successful = document.execCommand('copy');
+  document.body.removeChild(textArea);
+
+  if (!successful) {
+    throw new Error('Copy command failed.');
+  }
+}
+
+function pulseButton(button, label = 'Copied!') {
+  const originalText = button.textContent;
+  button.textContent = label;
+  button.disabled = true;
+
+  window.setTimeout(() => {
+    button.textContent = originalText;
+    button.disabled = false;
+  }, 1000);
+}
+
+async function copyFieldValue(getValue, button, emptyMessage) {
+  const value = getValue().trim();
+  if (!value || value === '—') {
+    statusLine.textContent = emptyMessage;
+    return;
+  }
+
+  try {
+    await copyTextToClipboard(value);
+    statusLine.textContent = '';
+    pulseButton(button);
+  } catch {
+    statusLine.textContent = 'Unable to copy to clipboard in this browser context.';
+  }
+}
+
 mmInput.addEventListener('input', updateFromMm);
 inchInput.addEventListener('input', updateFromInches);
 
@@ -190,4 +241,23 @@ calcInput.addEventListener('input', () => {
   }
 
   calcResult.textContent = `Result: ${formatDecimal(result, 10)}`;
+});
+
+copyMmButton.addEventListener('click', () => {
+  copyFieldValue(() => mmInput.value, copyMmButton, 'Millimeter field is empty.');
+});
+
+copyInchButton.addEventListener('click', () => {
+  copyFieldValue(() => inchInput.value, copyInchButton, 'Inch field is empty.');
+});
+
+copyResultButton.addEventListener('click', () => {
+  const { result, error } = evaluateExpression(calcInput.value);
+
+  if (error || result === null) {
+    statusLine.textContent = 'Enter a valid arithmetic expression to copy its result.';
+    return;
+  }
+
+  copyFieldValue(() => formatDecimal(result, 10), copyResultButton, 'No result available to copy.');
 });

@@ -8,12 +8,17 @@ from pathlib import Path
 from tkinter import messagebox, ttk
 
 MM_PER_INCH = 25.4
+WIDGET_WIDTH = 560
+WIDGET_HEIGHT = 960
 
 
 class ConversionWidget(tk.Tk):
     def __init__(self) -> None:
         super().__init__()
         self.title("MM ↔ Inch Desktop Widget")
+        self.geometry(f"{WIDGET_WIDTH}x{WIDGET_HEIGHT}")
+        self.minsize(WIDGET_WIDTH, WIDGET_HEIGHT)
+        self.maxsize(WIDGET_WIDTH, WIDGET_HEIGHT)
         self.resizable(False, False)
         self.configure(padx=16, pady=16)
 
@@ -106,7 +111,8 @@ class ConversionWidget(tk.Tk):
         ttk.Entry(layer_frame, textvariable=self.layer_height_target_var, width=14).grid(column=1, row=0, sticky="ew", padx=(8, 0))
         ttk.Label(layer_frame, text="Layer height (mm)").grid(column=0, row=1, sticky="w", pady=(6, 0))
         ttk.Entry(layer_frame, textvariable=self.layer_height_var, width=14).grid(column=1, row=1, sticky="ew", padx=(8, 0), pady=(6, 0))
-        ttk.Button(layer_frame, text="Calculate", command=self._calculate_layer_helper).grid(column=0, row=2, columnspan=2, sticky="w", pady=(8, 4))
+        ttk.Button(layer_frame, text="Calculate", command=self._calculate_layer_helper).grid(column=0, row=2, sticky="w", pady=(8, 4))
+        ttk.Button(layer_frame, text="Clear", command=self._clear_layer_helper).grid(column=1, row=2, sticky="e", pady=(8, 4))
         ttk.Label(layer_frame, textvariable=self.layer_output_var, wraplength=460, justify="left").grid(column=0, row=3, columnspan=2, sticky="w")
         layer_frame.grid_columnconfigure(1, weight=1)
 
@@ -116,7 +122,8 @@ class ConversionWidget(tk.Tk):
         ttk.Entry(wall_frame, textvariable=self.wall_target_var, width=14).grid(column=1, row=0, sticky="ew", padx=(8, 0))
         ttk.Label(wall_frame, text="Line width (mm)").grid(column=0, row=1, sticky="w", pady=(6, 0))
         ttk.Entry(wall_frame, textvariable=self.line_width_var, width=14).grid(column=1, row=1, sticky="ew", padx=(8, 0), pady=(6, 0))
-        ttk.Button(wall_frame, text="Calculate", command=self._calculate_wall_helper).grid(column=0, row=2, columnspan=2, sticky="w", pady=(8, 4))
+        ttk.Button(wall_frame, text="Calculate", command=self._calculate_wall_helper).grid(column=0, row=2, sticky="w", pady=(8, 4))
+        ttk.Button(wall_frame, text="Clear", command=self._clear_wall_helper).grid(column=1, row=2, sticky="e", pady=(8, 4))
         ttk.Label(wall_frame, textvariable=self.wall_output_var, wraplength=460, justify="left").grid(column=0, row=3, columnspan=2, sticky="w")
         wall_frame.grid_columnconfigure(1, weight=1)
 
@@ -137,7 +144,8 @@ class ConversionWidget(tk.Tk):
         ttk.Label(snap_frame, text="Line width (mm)").grid(column=2, row=2, sticky="w", pady=(6, 0))
         ttk.Entry(snap_frame, textvariable=self.snap_line_width_var, width=12).grid(column=3, row=2, sticky="ew", pady=(6, 0))
 
-        ttk.Button(snap_frame, text="Calculate", command=self._calculate_snap_helper).grid(column=0, row=3, columnspan=4, sticky="w", pady=(8, 4))
+        ttk.Button(snap_frame, text="Calculate", command=self._calculate_snap_helper).grid(column=0, row=3, columnspan=2, sticky="w", pady=(8, 4))
+        ttk.Button(snap_frame, text="Clear", command=self._clear_snap_helper).grid(column=2, row=3, columnspan=2, sticky="e", pady=(8, 4))
         ttk.Label(snap_frame, textvariable=self.snap_output_var, wraplength=460, justify="left").grid(column=0, row=4, columnspan=4, sticky="w")
         for col in (1, 3):
             snap_frame.grid_columnconfigure(col, weight=1)
@@ -377,6 +385,25 @@ class ConversionWidget(tk.Tk):
     def _clear_calculator(self) -> None:
         self.calc_expr_var.set("")
         self.calc_result_var.set("Result: —")
+
+    def _clear_layer_helper(self) -> None:
+        self.layer_height_target_var.set("")
+        self.layer_height_var.set("")
+        self.layer_output_var.set("Enter desired height + layer height, then click Calculate.")
+
+    def _clear_wall_helper(self) -> None:
+        self.wall_target_var.set("")
+        self.line_width_var.set("")
+        self.wall_output_var.set("Enter target wall thickness + line width, then click Calculate.")
+
+    def _clear_snap_helper(self) -> None:
+        self.snap_length_var.set("")
+        self.snap_width_var.set("")
+        self.snap_height_var.set("")
+        self.nozzle_var.set("")
+        self.snap_layer_var.set("")
+        self.snap_line_width_var.set("")
+        self.snap_output_var.set("Enter dimensions + print settings, then click Calculate.")
 
     @staticmethod
     def _snap_dimension(value: float, increment: float):

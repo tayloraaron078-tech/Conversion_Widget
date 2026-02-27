@@ -5,7 +5,6 @@ import sys
 import tkinter as tk
 from pathlib import Path
 from tkinter import messagebox, ttk
-from tkinter import ttk
 
 MM_PER_INCH = 25.4
 
@@ -19,6 +18,7 @@ class ConversionWidget(tk.Tk):
 
         self._active_source = None
         self._save_job = None
+        self._feedback_jobs = {}
 
         self.mm_var = tk.StringVar()
         self.inch_var = tk.StringVar()
@@ -39,15 +39,19 @@ class ConversionWidget(tk.Tk):
 
     def _build_ui(self) -> None:
         title = ttk.Label(self, text="MM ↔ Inch Converter", font=("Segoe UI", 14, "bold"))
-        title.grid(column=0, row=0, columnspan=2, sticky="w", pady=(0, 8))
+        title.grid(column=0, row=0, columnspan=3, sticky="w", pady=(0, 8))
 
         ttk.Label(self, text="Millimeters (mm)").grid(column=0, row=1, sticky="w")
         mm_entry = ttk.Entry(self, textvariable=self.mm_var, width=30)
         mm_entry.grid(column=0, row=2, columnspan=2, sticky="ew", pady=(0, 8))
+        self.copy_mm_button = ttk.Button(self, text="Copy", command=self._copy_mm)
+        self.copy_mm_button.grid(column=2, row=2, sticky="e", padx=(8, 0), pady=(0, 8))
 
         ttk.Label(self, text="Inches (in)").grid(column=0, row=3, sticky="w")
         inch_entry = ttk.Entry(self, textvariable=self.inch_var, width=30)
         inch_entry.grid(column=0, row=4, columnspan=2, sticky="ew", pady=(0, 8))
+        self.copy_inch_button = ttk.Button(self, text="Copy", command=self._copy_inches)
+        self.copy_inch_button.grid(column=2, row=4, sticky="e", padx=(8, 0), pady=(0, 8))
 
         ttk.Label(self, text="Inch decimal:").grid(column=0, row=5, sticky="w")
         ttk.Label(self, textvariable=self.inch_decimal_var).grid(column=1, row=5, sticky="w")
@@ -56,24 +60,30 @@ class ConversionWidget(tk.Tk):
         ttk.Label(self, textvariable=self.inch_fraction_var).grid(column=1, row=6, sticky="w")
 
         ttk.Label(self, textvariable=self.status_var, foreground="#b91c1c").grid(
-            column=0, row=7, columnspan=2, sticky="w", pady=(6, 14)
+            column=0, row=7, columnspan=3, sticky="w", pady=(6, 14)
         )
 
-        ttk.Separator(self, orient="horizontal").grid(column=0, row=8, columnspan=2, sticky="ew", pady=(0, 12))
+        ttk.Separator(self, orient="horizontal").grid(column=0, row=8, columnspan=3, sticky="ew", pady=(0, 12))
 
         ttk.Label(self, text="Quick Calculator", font=("Segoe UI", 12, "bold")).grid(
-            column=0, row=9, columnspan=2, sticky="w", pady=(0, 6)
+            column=0, row=9, columnspan=3, sticky="w", pady=(0, 6)
         )
         ttk.Label(self, text="Expression").grid(column=0, row=10, sticky="w")
         calc_entry = ttk.Entry(self, textvariable=self.calc_expr_var, width=30)
-        calc_entry.grid(column=0, row=11, sticky="ew", pady=(0, 8))
-        ttk.Button(self, text="Clear", command=self._clear_calculator).grid(column=1, row=11, sticky="e", pady=(0, 8))
         calc_entry.grid(column=0, row=11, columnspan=2, sticky="ew", pady=(0, 8))
+        ttk.Button(self, text="Clear", command=self._clear_calculator).grid(
+            column=2, row=11, sticky="e", padx=(8, 0), pady=(0, 8)
+        )
         ttk.Label(self, textvariable=self.calc_result_var).grid(column=0, row=12, columnspan=2, sticky="w")
+        self.copy_result_button = ttk.Button(self, text="Copy", command=self._copy_result)
+        self.copy_result_button.grid(column=2, row=12, sticky="e", padx=(8, 0))
 
         self.mm_entry = mm_entry
         self.inch_entry = inch_entry
         self.calc_entry = calc_entry
+
+        self.grid_columnconfigure(0, weight=1)
+        self.grid_columnconfigure(1, weight=1)
 
     def _bind_events(self) -> None:
         self.mm_entry.bind("<KeyRelease>", self._on_mm_changed)
@@ -293,6 +303,44 @@ class ConversionWidget(tk.Tk):
     def _clear_calculator(self) -> None:
         self.calc_expr_var.set("")
         self.calc_result_var.set("Result: —")
+
+    def _flash_button(self, button: ttk.Button, duration_ms: int = 900) -> None:
+        button.configure(text="Copied!", state="disabled")
+
+        existing_job = self._feedback_jobs.get(button)
+        if existing_job is not None:
+            self.after_cancel(existing_job)
+
+        def restore() -> None:
+            button.configure(text="Copy", state="normal")
+            self._feedback_jobs.pop(button, None)
+
+        self._feedback_jobs[button] = self.after(duration_ms, restore)
+
+    def _copy_text(self, text: str, empty_message: str, button: ttk.Button) -> None:
+        if not text.strip() or text.strip() == "—":
+            self.status_var.set(empty_message)
+            return
+
+        self.clipboard_clear()
+        self.clipboard_append(text.strip())
+        self.update_idletasks()
+        self.status_var.set("")
+        self._flash_button(button)
+
+    def _copy_mm(self) -> None:
+        self._copy_text(self.mm_var.get(), "Millimeter field is empty.", self.copy_mm_button)
+
+    def _copy_inches(self) -> None:
+        self._copy_text(self.inch_var.get(), "Inch field is empty.", self.copy_inch_button)
+
+    def _copy_result(self) -> None:
+        result, error = self._evaluate_expression(self.calc_expr_var.get())
+        if error or result is None:
+            self.status_var.set("Enter a valid arithmetic expression to copy its result.")
+            return
+
+        self._copy_text(self._format_decimal(result, 10), "No result available to copy.", self.copy_result_button)
 
 
 def _display_hint() -> str:

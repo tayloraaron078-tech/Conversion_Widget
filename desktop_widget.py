@@ -32,11 +32,25 @@ class ConversionWidget(tk.Tk):
 
         self.layer_height_target_var = tk.StringVar()
         self.layer_height_var = tk.StringVar()
-        self.layer_output_var = tk.StringVar(value="Enter desired height + layer height, then click Calculate.")
+        self.layer_output_var = tk.StringVar(
+            value=(
+                "Exact layer count: —\n"
+                "Nearest clean multiple: —\n"
+                "Lower option: —\n"
+                "Snap-up option: —"
+            )
+        )
 
         self.wall_target_var = tk.StringVar()
         self.line_width_var = tk.StringVar()
-        self.wall_output_var = tk.StringVar(value="Enter target wall thickness + line width, then click Calculate.")
+        self.wall_output_var = tk.StringVar(
+            value=(
+                "Exact wall count: —\n"
+                "Nearest printable thickness: —\n"
+                "Lower option: —\n"
+                "Snap-up option: —"
+            )
+        )
 
         self.snap_length_var = tk.StringVar()
         self.snap_width_var = tk.StringVar()
@@ -44,7 +58,14 @@ class ConversionWidget(tk.Tk):
         self.nozzle_var = tk.StringVar()
         self.snap_layer_var = tk.StringVar()
         self.snap_line_width_var = tk.StringVar()
-        self.snap_output_var = tk.StringVar(value="Enter dimensions + print settings, then click Calculate.")
+        self.snap_output_var = tk.StringVar(
+            value=(
+                "Nozzle: — | Layer: — | Line width: —\n"
+                "Length snap: —\n"
+                "Width snap: —\n"
+                "Height snap: —"
+            )
+        )
 
         self._build_ui()
         self._bind_events()
@@ -55,73 +76,87 @@ class ConversionWidget(tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self._on_close)
 
     def _build_ui(self) -> None:
-        title = ttk.Label(self, text="MM ↔ Inch Converter", font=("Segoe UI", 14, "bold"))
+        left_column = ttk.Frame(self)
+        left_column.grid(column=0, row=0, sticky="n", padx=(0, 12))
+
+        middle_column = ttk.Frame(self)
+        middle_column.grid(column=1, row=0, sticky="n", padx=(0, 12))
+
+        right_column = ttk.Frame(self)
+        right_column.grid(column=2, row=0, sticky="n")
+
+        title = ttk.Label(left_column, text="MM ↔ Inch Converter", font=("Segoe UI", 14, "bold"))
         title.grid(column=0, row=0, columnspan=3, sticky="w", pady=(0, 8))
 
-        ttk.Label(self, text="Millimeters (mm)").grid(column=0, row=1, sticky="w")
-        mm_entry = ttk.Entry(self, textvariable=self.mm_var, width=30)
+        ttk.Label(left_column, text="Millimeters (mm)").grid(column=0, row=1, sticky="w")
+        mm_entry = ttk.Entry(left_column, textvariable=self.mm_var, width=28)
         mm_entry.grid(column=0, row=2, columnspan=2, sticky="ew", pady=(0, 8))
-        self.copy_mm_button = ttk.Button(self, text="Copy", command=self._copy_mm)
+        self.copy_mm_button = ttk.Button(left_column, text="Copy", command=self._copy_mm)
         self.copy_mm_button.grid(column=2, row=2, sticky="e", padx=(8, 0), pady=(0, 8))
 
-        ttk.Label(self, text="Inches (in)").grid(column=0, row=3, sticky="w")
-        inch_entry = ttk.Entry(self, textvariable=self.inch_var, width=30)
+        ttk.Label(left_column, text="Inches (in)").grid(column=0, row=3, sticky="w")
+        inch_entry = ttk.Entry(left_column, textvariable=self.inch_var, width=28)
         inch_entry.grid(column=0, row=4, columnspan=2, sticky="ew", pady=(0, 8))
-        self.copy_inch_button = ttk.Button(self, text="Copy", command=self._copy_inches)
+        self.copy_inch_button = ttk.Button(left_column, text="Copy", command=self._copy_inches)
         self.copy_inch_button.grid(column=2, row=4, sticky="e", padx=(8, 0), pady=(0, 8))
 
-        ttk.Label(self, text="Inch decimal:").grid(column=0, row=5, sticky="w")
-        ttk.Label(self, textvariable=self.inch_decimal_var).grid(column=1, row=5, sticky="w")
+        ttk.Label(left_column, text="Inch decimal:").grid(column=0, row=5, sticky="w")
+        ttk.Label(left_column, textvariable=self.inch_decimal_var).grid(column=1, row=5, sticky="w")
 
-        ttk.Label(self, text="Inch fraction:").grid(column=0, row=6, sticky="w")
-        ttk.Label(self, textvariable=self.inch_fraction_var).grid(column=1, row=6, sticky="w")
+        ttk.Label(left_column, text="Inch fraction:").grid(column=0, row=6, sticky="w")
+        ttk.Label(left_column, textvariable=self.inch_fraction_var).grid(column=1, row=6, sticky="w")
 
-        ttk.Label(self, textvariable=self.status_var, foreground="#b91c1c").grid(
+        ttk.Label(left_column, textvariable=self.status_var, foreground="#b91c1c", wraplength=350).grid(
             column=0, row=7, columnspan=3, sticky="w", pady=(6, 12)
         )
 
-        ttk.Separator(self, orient="horizontal").grid(column=0, row=8, columnspan=3, sticky="ew", pady=(0, 10))
+        ttk.Separator(left_column, orient="horizontal").grid(column=0, row=8, columnspan=3, sticky="ew", pady=(0, 10))
 
-        ttk.Label(self, text="Quick Calculator", font=("Segoe UI", 12, "bold")).grid(
+        ttk.Label(left_column, text="Quick Calculator", font=("Segoe UI", 12, "bold")).grid(
             column=0, row=9, columnspan=3, sticky="w", pady=(0, 6)
         )
-        ttk.Label(self, text="Expression").grid(column=0, row=10, sticky="w")
-        calc_entry = ttk.Entry(self, textvariable=self.calc_expr_var, width=30)
+        ttk.Label(left_column, text="Expression").grid(column=0, row=10, sticky="w")
+        calc_entry = ttk.Entry(left_column, textvariable=self.calc_expr_var, width=28)
         calc_entry.grid(column=0, row=11, columnspan=2, sticky="ew", pady=(0, 8))
-        ttk.Button(self, text="Clear", command=self._clear_calculator).grid(
+        ttk.Button(left_column, text="Clear", command=self._clear_calculator).grid(
             column=2, row=11, sticky="e", padx=(8, 0), pady=(0, 8)
         )
-        ttk.Label(self, textvariable=self.calc_result_var).grid(column=0, row=12, columnspan=2, sticky="w")
-        self.copy_result_button = ttk.Button(self, text="Copy", command=self._copy_result)
+        ttk.Label(left_column, textvariable=self.calc_result_var).grid(column=0, row=12, columnspan=2, sticky="w")
+        self.copy_result_button = ttk.Button(left_column, text="Copy", command=self._copy_result)
         self.copy_result_button.grid(column=2, row=12, sticky="e", padx=(8, 0))
 
-        ttk.Separator(self, orient="horizontal").grid(column=0, row=13, columnspan=3, sticky="ew", pady=(10, 10))
+        ttk.Label(middle_column, text="Slicer-Friendly Design Helpers", font=("Segoe UI", 12, "bold")).grid(
+            column=0, row=0, sticky="w", pady=(0, 6)
+        )
 
-        helpers_title = ttk.Label(self, text="Slicer-Friendly Design Helpers", font=("Segoe UI", 12, "bold"))
-        helpers_title.grid(column=0, row=14, columnspan=3, sticky="w", pady=(0, 6))
-
-        layer_frame = ttk.LabelFrame(self, text="Layer Height Math Helper", padding=8)
-        layer_frame.grid(column=0, row=15, columnspan=3, sticky="ew", pady=(0, 8))
+        layer_frame = ttk.LabelFrame(middle_column, text="Layer Height Math Helper", padding=8)
+        layer_frame.grid(column=0, row=1, sticky="ew", pady=(0, 8))
         ttk.Label(layer_frame, text="Desired height (mm)").grid(column=0, row=0, sticky="w")
         ttk.Entry(layer_frame, textvariable=self.layer_height_target_var, width=14).grid(column=1, row=0, sticky="ew", padx=(8, 0))
         ttk.Label(layer_frame, text="Layer height (mm)").grid(column=0, row=1, sticky="w", pady=(6, 0))
         ttk.Entry(layer_frame, textvariable=self.layer_height_var, width=14).grid(column=1, row=1, sticky="ew", padx=(8, 0), pady=(6, 0))
         ttk.Button(layer_frame, text="Calculate", command=self._calculate_layer_helper).grid(column=0, row=2, columnspan=2, sticky="w", pady=(8, 4))
-        ttk.Label(layer_frame, textvariable=self.layer_output_var, wraplength=460, justify="left").grid(column=0, row=3, columnspan=2, sticky="w")
+        layer_results_frame = ttk.LabelFrame(layer_frame, text="Results", padding=6)
+        layer_results_frame.grid(column=0, row=3, columnspan=2, sticky="ew")
+        ttk.Label(layer_results_frame, textvariable=self.layer_output_var, justify="left").grid(column=0, row=0, sticky="w")
         layer_frame.grid_columnconfigure(1, weight=1)
+        layer_results_frame.grid_columnconfigure(0, weight=1)
 
-        wall_frame = ttk.LabelFrame(self, text="Wall Count Helper", padding=8)
-        wall_frame.grid(column=0, row=16, columnspan=3, sticky="ew", pady=(0, 8))
+        wall_frame = ttk.LabelFrame(middle_column, text="Wall Count Helper", padding=8)
+        wall_frame.grid(column=0, row=2, sticky="ew", pady=(0, 8))
         ttk.Label(wall_frame, text="Target wall thickness (mm)").grid(column=0, row=0, sticky="w")
         ttk.Entry(wall_frame, textvariable=self.wall_target_var, width=14).grid(column=1, row=0, sticky="ew", padx=(8, 0))
         ttk.Label(wall_frame, text="Line width (mm)").grid(column=0, row=1, sticky="w", pady=(6, 0))
         ttk.Entry(wall_frame, textvariable=self.line_width_var, width=14).grid(column=1, row=1, sticky="ew", padx=(8, 0), pady=(6, 0))
         ttk.Button(wall_frame, text="Calculate", command=self._calculate_wall_helper).grid(column=0, row=2, columnspan=2, sticky="w", pady=(8, 4))
-        ttk.Label(wall_frame, textvariable=self.wall_output_var, wraplength=460, justify="left").grid(column=0, row=3, columnspan=2, sticky="w")
+        wall_results_frame = ttk.LabelFrame(wall_frame, text="Results", padding=6)
+        wall_results_frame.grid(column=0, row=3, columnspan=2, sticky="ew")
+        ttk.Label(wall_results_frame, textvariable=self.wall_output_var, justify="left").grid(column=0, row=0, sticky="w")
         wall_frame.grid_columnconfigure(1, weight=1)
+        wall_results_frame.grid_columnconfigure(0, weight=1)
 
-        snap_frame = ttk.LabelFrame(self, text="CAD Dimension Snap Helper", padding=8)
-        snap_frame.grid(column=0, row=17, columnspan=3, sticky="ew")
+        snap_frame = ttk.LabelFrame(right_column, text="CAD Dimension Snap Helper", padding=8)
+        snap_frame.grid(column=0, row=0, sticky="n")
         ttk.Label(snap_frame, text="Desired length (mm)").grid(column=0, row=0, sticky="w")
         ttk.Entry(snap_frame, textvariable=self.snap_length_var, width=12).grid(column=1, row=0, sticky="ew", padx=(8, 12))
         ttk.Label(snap_frame, text="Desired width (mm)").grid(column=2, row=0, sticky="w")
@@ -138,9 +173,12 @@ class ConversionWidget(tk.Tk):
         ttk.Entry(snap_frame, textvariable=self.snap_line_width_var, width=12).grid(column=3, row=2, sticky="ew", pady=(6, 0))
 
         ttk.Button(snap_frame, text="Calculate", command=self._calculate_snap_helper).grid(column=0, row=3, columnspan=4, sticky="w", pady=(8, 4))
-        ttk.Label(snap_frame, textvariable=self.snap_output_var, wraplength=460, justify="left").grid(column=0, row=4, columnspan=4, sticky="w")
+        snap_results_frame = ttk.LabelFrame(snap_frame, text="Results", padding=6)
+        snap_results_frame.grid(column=0, row=4, columnspan=4, sticky="ew")
+        ttk.Label(snap_results_frame, textvariable=self.snap_output_var, justify="left").grid(column=0, row=0, sticky="w")
         for col in (1, 3):
             snap_frame.grid_columnconfigure(col, weight=1)
+        snap_results_frame.grid_columnconfigure(0, weight=1)
 
         self.mm_entry = mm_entry
         self.inch_entry = inch_entry
@@ -148,6 +186,7 @@ class ConversionWidget(tk.Tk):
 
         self.grid_columnconfigure(0, weight=1)
         self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=1)
 
     def _bind_events(self) -> None:
         self.mm_entry.bind("<KeyRelease>", self._on_mm_changed)

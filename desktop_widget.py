@@ -1,4 +1,5 @@
 import json
+import math
 import os
 import re
 import sys
@@ -28,6 +29,22 @@ class ConversionWidget(tk.Tk):
 
         self.calc_expr_var = tk.StringVar()
         self.calc_result_var = tk.StringVar(value="Result: —")
+
+        self.layer_height_target_var = tk.StringVar()
+        self.layer_height_var = tk.StringVar()
+        self.layer_output_var = tk.StringVar(value="Enter desired height + layer height, then click Calculate.")
+
+        self.wall_target_var = tk.StringVar()
+        self.line_width_var = tk.StringVar()
+        self.wall_output_var = tk.StringVar(value="Enter target wall thickness + line width, then click Calculate.")
+
+        self.snap_length_var = tk.StringVar()
+        self.snap_width_var = tk.StringVar()
+        self.snap_height_var = tk.StringVar()
+        self.nozzle_var = tk.StringVar()
+        self.snap_layer_var = tk.StringVar()
+        self.snap_line_width_var = tk.StringVar()
+        self.snap_output_var = tk.StringVar(value="Enter dimensions + print settings, then click Calculate.")
 
         self._build_ui()
         self._bind_events()
@@ -60,10 +77,10 @@ class ConversionWidget(tk.Tk):
         ttk.Label(self, textvariable=self.inch_fraction_var).grid(column=1, row=6, sticky="w")
 
         ttk.Label(self, textvariable=self.status_var, foreground="#b91c1c").grid(
-            column=0, row=7, columnspan=3, sticky="w", pady=(6, 14)
+            column=0, row=7, columnspan=3, sticky="w", pady=(6, 12)
         )
 
-        ttk.Separator(self, orient="horizontal").grid(column=0, row=8, columnspan=3, sticky="ew", pady=(0, 12))
+        ttk.Separator(self, orient="horizontal").grid(column=0, row=8, columnspan=3, sticky="ew", pady=(0, 10))
 
         ttk.Label(self, text="Quick Calculator", font=("Segoe UI", 12, "bold")).grid(
             column=0, row=9, columnspan=3, sticky="w", pady=(0, 6)
@@ -77,6 +94,53 @@ class ConversionWidget(tk.Tk):
         ttk.Label(self, textvariable=self.calc_result_var).grid(column=0, row=12, columnspan=2, sticky="w")
         self.copy_result_button = ttk.Button(self, text="Copy", command=self._copy_result)
         self.copy_result_button.grid(column=2, row=12, sticky="e", padx=(8, 0))
+
+        ttk.Separator(self, orient="horizontal").grid(column=0, row=13, columnspan=3, sticky="ew", pady=(10, 10))
+
+        helpers_title = ttk.Label(self, text="Slicer-Friendly Design Helpers", font=("Segoe UI", 12, "bold"))
+        helpers_title.grid(column=0, row=14, columnspan=3, sticky="w", pady=(0, 6))
+
+        layer_frame = ttk.LabelFrame(self, text="Layer Height Math Helper", padding=8)
+        layer_frame.grid(column=0, row=15, columnspan=3, sticky="ew", pady=(0, 8))
+        ttk.Label(layer_frame, text="Desired height (mm)").grid(column=0, row=0, sticky="w")
+        ttk.Entry(layer_frame, textvariable=self.layer_height_target_var, width=14).grid(column=1, row=0, sticky="ew", padx=(8, 0))
+        ttk.Label(layer_frame, text="Layer height (mm)").grid(column=0, row=1, sticky="w", pady=(6, 0))
+        ttk.Entry(layer_frame, textvariable=self.layer_height_var, width=14).grid(column=1, row=1, sticky="ew", padx=(8, 0), pady=(6, 0))
+        ttk.Button(layer_frame, text="Calculate", command=self._calculate_layer_helper).grid(column=0, row=2, columnspan=2, sticky="w", pady=(8, 4))
+        ttk.Label(layer_frame, textvariable=self.layer_output_var, wraplength=460, justify="left").grid(column=0, row=3, columnspan=2, sticky="w")
+        layer_frame.grid_columnconfigure(1, weight=1)
+
+        wall_frame = ttk.LabelFrame(self, text="Wall Count Helper", padding=8)
+        wall_frame.grid(column=0, row=16, columnspan=3, sticky="ew", pady=(0, 8))
+        ttk.Label(wall_frame, text="Target wall thickness (mm)").grid(column=0, row=0, sticky="w")
+        ttk.Entry(wall_frame, textvariable=self.wall_target_var, width=14).grid(column=1, row=0, sticky="ew", padx=(8, 0))
+        ttk.Label(wall_frame, text="Line width (mm)").grid(column=0, row=1, sticky="w", pady=(6, 0))
+        ttk.Entry(wall_frame, textvariable=self.line_width_var, width=14).grid(column=1, row=1, sticky="ew", padx=(8, 0), pady=(6, 0))
+        ttk.Button(wall_frame, text="Calculate", command=self._calculate_wall_helper).grid(column=0, row=2, columnspan=2, sticky="w", pady=(8, 4))
+        ttk.Label(wall_frame, textvariable=self.wall_output_var, wraplength=460, justify="left").grid(column=0, row=3, columnspan=2, sticky="w")
+        wall_frame.grid_columnconfigure(1, weight=1)
+
+        snap_frame = ttk.LabelFrame(self, text="CAD Dimension Snap Helper", padding=8)
+        snap_frame.grid(column=0, row=17, columnspan=3, sticky="ew")
+        ttk.Label(snap_frame, text="Desired length (mm)").grid(column=0, row=0, sticky="w")
+        ttk.Entry(snap_frame, textvariable=self.snap_length_var, width=12).grid(column=1, row=0, sticky="ew", padx=(8, 12))
+        ttk.Label(snap_frame, text="Desired width (mm)").grid(column=2, row=0, sticky="w")
+        ttk.Entry(snap_frame, textvariable=self.snap_width_var, width=12).grid(column=3, row=0, sticky="ew")
+
+        ttk.Label(snap_frame, text="Desired height (mm)").grid(column=0, row=1, sticky="w", pady=(6, 0))
+        ttk.Entry(snap_frame, textvariable=self.snap_height_var, width=12).grid(column=1, row=1, sticky="ew", padx=(8, 12), pady=(6, 0))
+        ttk.Label(snap_frame, text="Nozzle size (mm)").grid(column=2, row=1, sticky="w", pady=(6, 0))
+        ttk.Entry(snap_frame, textvariable=self.nozzle_var, width=12).grid(column=3, row=1, sticky="ew", pady=(6, 0))
+
+        ttk.Label(snap_frame, text="Layer height (mm)").grid(column=0, row=2, sticky="w", pady=(6, 0))
+        ttk.Entry(snap_frame, textvariable=self.snap_layer_var, width=12).grid(column=1, row=2, sticky="ew", padx=(8, 12), pady=(6, 0))
+        ttk.Label(snap_frame, text="Line width (mm)").grid(column=2, row=2, sticky="w", pady=(6, 0))
+        ttk.Entry(snap_frame, textvariable=self.snap_line_width_var, width=12).grid(column=3, row=2, sticky="ew", pady=(6, 0))
+
+        ttk.Button(snap_frame, text="Calculate", command=self._calculate_snap_helper).grid(column=0, row=3, columnspan=4, sticky="w", pady=(8, 4))
+        ttk.Label(snap_frame, textvariable=self.snap_output_var, wraplength=460, justify="left").grid(column=0, row=4, columnspan=4, sticky="w")
+        for col in (1, 3):
+            snap_frame.grid_columnconfigure(col, weight=1)
 
         self.mm_entry = mm_entry
         self.inch_entry = inch_entry
@@ -151,6 +215,16 @@ class ConversionWidget(tk.Tk):
         text = f"{value:.{precision}f}"
         text = text.rstrip("0").rstrip(".")
         return text if text else "0"
+
+    @staticmethod
+    def _parse_positive_number(text: str):
+        try:
+            value = float(text.strip())
+        except ValueError:
+            return float("nan")
+        if value <= 0:
+            return float("nan")
+        return value
 
     def _to_mixed_fraction(self, value: float, max_denominator: int = 64) -> str:
         if value != value:
@@ -303,6 +377,93 @@ class ConversionWidget(tk.Tk):
     def _clear_calculator(self) -> None:
         self.calc_expr_var.set("")
         self.calc_result_var.set("Result: —")
+
+    @staticmethod
+    def _snap_dimension(value: float, increment: float):
+        count = max(1, round(value / increment))
+        snapped = count * increment
+        delta = snapped - value
+        return count, snapped, delta
+
+    def _calculate_layer_helper(self) -> None:
+        target = self._parse_positive_number(self.layer_height_target_var.get())
+        layer_height = self._parse_positive_number(self.layer_height_var.get())
+
+        if target != target or layer_height != layer_height:
+            self.layer_output_var.set("Please enter valid positive values for desired height and layer height.")
+            return
+
+        exact_layers = target / layer_height
+        lower_layers = max(1, math.floor(exact_layers))
+        upper_layers = max(1, math.ceil(exact_layers))
+        nearest_layers = max(1, round(exact_layers))
+
+        lower_height = lower_layers * layer_height
+        upper_height = upper_layers * layer_height
+        nearest_height = nearest_layers * layer_height
+
+        self.layer_output_var.set(
+            "\n".join(
+                [
+                    f"Exact layer count: {self._format_decimal(exact_layers, 4)}",
+                    f"Nearest clean multiple: {self._format_decimal(nearest_height, 4)} mm ({nearest_layers} layers)",
+                    f"Lower option: {lower_layers} layers = {self._format_decimal(lower_height, 4)} mm",
+                    f"Snap-up option: {upper_layers} layers = {self._format_decimal(upper_height, 4)} mm",
+                ]
+            )
+        )
+
+    def _calculate_wall_helper(self) -> None:
+        target = self._parse_positive_number(self.wall_target_var.get())
+        line_width = self._parse_positive_number(self.line_width_var.get())
+
+        if target != target or line_width != line_width:
+            self.wall_output_var.set("Please enter valid positive values for target wall thickness and line width.")
+            return
+
+        exact_count = target / line_width
+        lower = max(1, math.floor(exact_count))
+        upper = max(1, math.ceil(exact_count))
+        nearest = max(1, round(exact_count))
+
+        self.wall_output_var.set(
+            "\n".join(
+                [
+                    f"Exact wall count: {self._format_decimal(exact_count, 4)}",
+                    f"Nearest printable thickness: {nearest} perimeters = {self._format_decimal(nearest * line_width, 4)} mm",
+                    f"Lower option: {lower} perimeters = {self._format_decimal(lower * line_width, 4)} mm",
+                    f"Snap-up option: {upper} perimeters = {self._format_decimal(upper * line_width, 4)} mm",
+                ]
+            )
+        )
+
+    def _calculate_snap_helper(self) -> None:
+        length = self._parse_positive_number(self.snap_length_var.get())
+        width = self._parse_positive_number(self.snap_width_var.get())
+        height = self._parse_positive_number(self.snap_height_var.get())
+        nozzle = self._parse_positive_number(self.nozzle_var.get())
+        layer_height = self._parse_positive_number(self.snap_layer_var.get())
+        line_width = self._parse_positive_number(self.snap_line_width_var.get())
+
+        values = [length, width, height, nozzle, layer_height, line_width]
+        if any(value != value for value in values):
+            self.snap_output_var.set("Please fill all fields with valid positive values.")
+            return
+
+        length_count, length_snap, length_delta = self._snap_dimension(length, line_width)
+        width_count, width_snap, width_delta = self._snap_dimension(width, line_width)
+        height_count, height_snap, height_delta = self._snap_dimension(height, layer_height)
+
+        self.snap_output_var.set(
+            "\n".join(
+                [
+                    f"Nozzle: {self._format_decimal(nozzle, 4)} mm | Layer: {self._format_decimal(layer_height, 4)} mm | Line width: {self._format_decimal(line_width, 4)} mm",
+                    f"Length snap: {length_count} lines = {self._format_decimal(length_snap, 4)} mm ({self._format_decimal(length_delta, 4)} mm adjustment)",
+                    f"Width snap: {width_count} lines = {self._format_decimal(width_snap, 4)} mm ({self._format_decimal(width_delta, 4)} mm adjustment)",
+                    f"Height snap: {height_count} layers = {self._format_decimal(height_snap, 4)} mm ({self._format_decimal(height_delta, 4)} mm adjustment)",
+                ]
+            )
+        )
 
     def _flash_button(self, button: ttk.Button, duration_ms: int = 900) -> None:
         button.configure(text="Copied!", state="disabled")

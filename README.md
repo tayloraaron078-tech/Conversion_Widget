@@ -5,6 +5,10 @@ A desktop utility for:
 - inch input as decimal, fraction (`1/4`), or mixed fraction (`1 1/4`)
 - inch display in both decimal and fraction form
 - a quick arithmetic calculator
+- 3D-print design helpers for slicer-friendly dimensions:
+  - layer height math helper
+  - wall count helper
+  - CAD dimension snap helper
 
 ## Run
 
@@ -23,4 +27,8 @@ export DISPLAY=:0
 python3 desktop_widget.py
 ```
 
-The app now exits with a clean message if no GUI display is available instead of showing a long traceback.
+The app exits with a clean message if no GUI display is available instead of showing a long traceback.
+
+## Note
+
+The legacy browser implementation (`index.html`, `script.js`, `styles.css`) has been removed. The maintained app is the Tkinter desktop widget.

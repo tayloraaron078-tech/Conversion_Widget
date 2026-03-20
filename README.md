@@ -30,5 +30,9 @@ python3 desktop_widget.py
 The app exits with a clean message if no GUI display is available instead of showing a long traceback.
 
 ## Note
+License: Redeemed 3D Non-Commercial License (R3D-NC)
+
+Free for personal use.  
+Commercial use requires permission.
 
 The legacy browser implementation (`index.html`, `script.js`, `styles.css`) has been removed. The maintained app is the Tkinter desktop widget.

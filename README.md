@@ -1,4 +1,4 @@
-# Conversion Widget (Desktop)
+# REDEEMED_3D Conversion Calculator (Desktop)
 
 A desktop utility for:
 - live **mm ↔ inch** conversion in either direction
